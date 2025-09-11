@@ -157,6 +157,8 @@ end)
 local MainTab = Window:CreateTab("Main", 4483362458)
 local ESPTab = Window:CreateTab("ESP & Teleport", 4483362458)
 
+local section MainTab:CreateSection(Select Fuel/Scrap)
+
 -- Item Selection Dropdown
 MainTab:CreateDropdown({
     Name = "Select Items to Collect",
