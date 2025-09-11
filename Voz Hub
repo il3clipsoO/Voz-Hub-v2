@@ -1,0 +1,443 @@
+--[[
+99 Nights in the Forest Hub V2
+Features: Auto Farm (Selectable + max count), ESP, Teleport, Kill Aura
+Theme: Dark Red
+]]
+
+-- Rayfield Library
+-- Rayfield Library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Drawing API Check
+if not Drawing then
+    warn("Drawing API not supported in this executor.")
+    return
+end
+
+-- Create Window with Key System
+local Window = Rayfield:CreateWindow({
+    Name = "👁️Voz Hub v2👁️",
+    LoadingTitle = "Loading Voz Hub...",
+    LoadingSubtitle = "by 9Voz",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "99NightsHub",
+        FileName = "Config"
+    },
+    Discord = {
+        Enabled = false
+    },
+    KeySystem = true, -- ✅ Enable key system
+    KeySettings = {
+        Title = "Voz Hub Access",
+        Subtitle = "Key System - 99 Nights",
+        Note = "Get your key from: https://raw.githubusercontent.com/il3clipsoO/Voz-Hub-System-/refs/heads/main/system",
+        FileName = "VozKeyStorage",
+        SaveKey = false,
+        GrabKeyFromSite = false,
+        Key = {"freehub2025", "voz-access"}
+    }
+})
+
+-- GLOBALS
+getgenv().AutoFarm = false
+getgenv().SelectedItems = {
+    "Log", "Coal", "Tyre", "Chair", "Sheet Metal",
+    "Bolt", "Broken Fan", "Fuel Canister", "Carrot", "Berry"
+}
+getgenv().ESPEnabled = false
+getgenv().KillAuraEnabled = false
+getgenv().AuraRadius = 15
+getgenv().SelectedEnemies = {"Bunny"}
+getgenv().MaxItemsToCollect = 5 -- default max items to pull per type per loop
+
+local ESPFolder = {}
+
+-- All Item Names
+local AllItems = {
+    "Log", "Coal", "Tyre", "Chair", "Sheet Metal",
+    "Bolt", "Broken Fan", "Fuel Canister", "Carrot", "Berry"
+}
+
+-- Auto Farm Loop
+function AutoFarmLoop()
+    while getgenv().AutoFarm and task.wait(1) do
+        local plr = game.Players.LocalPlayer
+        local root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            local collectedCount = {}
+            for _, itemName in pairs(getgenv().SelectedItems) do
+                collectedCount[itemName] = 0
+            end
+
+            for _, item in pairs(workspace.Items:GetChildren()) do
+                if item:IsA("Model") and table.find(getgenv().SelectedItems, item.Name) then
+                    if collectedCount[item.Name] < getgenv().MaxItemsToCollect then
+                        local primary = item.PrimaryPart or item:FindFirstChildWhichIsA("Part")
+                        if primary then
+                            primary.CFrame = root.CFrame * CFrame.new(0, 3, 0)
+                            collectedCount[item.Name] = collectedCount[item.Name] + 1
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- Kill Aura Loop
+function KillAuraLoop()
+    while getgenv().KillAuraEnabled do
+        task.wait(0.3)
+        local player = game.Players.LocalPlayer
+        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            for _, enemy in pairs(workspace.Characters:GetChildren()) do
+                if enemy:IsA("Model") and table.find(getgenv().SelectedEnemies, enemy.Name) then
+                    local enemyRoot = enemy:FindFirstChild("HumanoidRootPart")
+                    local humanoid = enemy:FindFirstChildOfClass("Humanoid")
+                    if enemyRoot and humanoid and humanoid.Health > 0 then
+                        local dist = (enemyRoot.Position - root.Position).Magnitude
+                        if dist <= getgenv().AuraRadius then
+                            humanoid:TakeDamage(1000)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- ESP Functions
+local function AddESP(item)
+    if ESPFolder[item] then return end
+    local box = Drawing.new("Square")
+    box.Visible = true
+    box.Color = Color3.fromRGB(255, 0, 0)
+    box.Thickness = 2
+    box.Filled = false
+    ESPFolder[item] = box
+end
+
+local function CleanupESP()
+    for item, box in pairs(ESPFolder) do
+        if not item or not item:IsDescendantOf(workspace) then
+            if box then box:Remove() end
+            ESPFolder[item] = nil
+        end
+    end
+end
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if not getgenv().ESPEnabled then return end
+    local plr = game.Players.LocalPlayer
+    local cam = workspace.CurrentCamera
+    if not cam then return end
+
+    CleanupESP()
+
+    for _, item in pairs(workspace.Items:GetChildren()) do
+        if item:IsA("Model") and table.find(getgenv().SelectedItems, item.Name) then
+            AddESP(item)
+            local primary = item.PrimaryPart or item:FindFirstChildWhichIsA("Part")
+            if primary then
+                local pos, onScreen = cam:WorldToViewportPoint(primary.Position)
+                local box = ESPFolder[item]
+                if box then
+                    box.Position = Vector2.new(pos.X - 15, pos.Y - 15)
+                    box.Size = Vector2.new(30, 30)
+                    box.Visible = onScreen
+                end
+            end
+        end
+    end
+end)
+
+-- GUI Tabs
+local MainTab = Window:CreateTab("Main", 4483362458)
+local ESPTab = Window:CreateTab("ESP & Teleport", 4483362458)
+
+-- Item Selection Dropdown
+MainTab:CreateDropdown({
+    Name = "Select Items to Collect",
+    Options = AllItems,
+    CurrentOption = getgenv().SelectedItems,
+    MultiSelection = true,
+    Flag = "SelectedItems",
+    Callback = function(Selection)
+        getgenv().SelectedItems = Selection
+        Rayfield:Notify({
+            Title = "Items Updated",
+            Content = "Now collecting: " .. table.concat(Selection, ", "),
+            Duration = 4,
+            Image = 4483362458
+        })
+    end
+})
+
+local Section = MainTab:CreateSection("Settings")
+
+-- Max Items InputBox
+MainTab:CreateInput({
+    Name = "Max Items to Collect",
+    PlaceholderText = "Enter a number (e.g. 5)",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(text)
+        local num = tonumber(text)
+        if num and num > 0 then
+            getgenv().MaxItemsToCollect = math.clamp(num, 1, 1000) -- clamp between 1 and 1000
+            Rayfield:Notify({
+                Title = "Max Items Updated",
+                Content = "Now collecting up to "..getgenv().MaxItemsToCollect.." items per type",
+                Duration = 4,
+                Image = 4483362458
+            })
+        else
+            Rayfield:Notify({
+                Title = "Invalid Input",
+                Content = "Please enter a valid positive number.",
+                Duration = 3,
+                Image = 4483362458
+            })
+        end
+    end
+})
+
+local Section = MainTab:CreateSection("Fuel And Scraps")
+
+-- Auto Farm Toggle
+MainTab:CreateToggle({
+    Name = "Auto Farm Selected Items",
+    CurrentValue = false,
+    Flag = "AutoFarm",
+    Callback = function(Value)
+        getgenv().AutoFarm = Value
+        if Value then
+            Rayfield:Notify({
+                Title = "Auto Farm",
+                Content = "Collecting selected items...",
+                Duration = 4,
+                Image = 4483362458
+            })
+            task.spawn(AutoFarmLoop)
+        else
+            Rayfield:Notify({
+                Title = "Auto Farm",
+                Content = "Stopped.",
+                Duration = 3,
+                Image = 4483362458
+            })
+        end
+    end
+})
+
+local Section = MainTab:CreateSection("Killaura")
+
+-- Kill Aura Toggle
+MainTab:CreateToggle({
+    Name = "Kill Aura (NOT WORKING)!",
+    CurrentValue = false,
+    Flag = "KillAura",
+    Callback = function(Value)
+        getgenv().KillAuraEnabled = Value
+        if Value then
+            Rayfield:Notify({
+                Title = "Kill Aura",
+                Content = "Bunnies will be slaughtered...",
+                Duration = 4,
+                Image = 4483362458
+            })
+            task.spawn(KillAuraLoop)
+        else
+            Rayfield:Notify({
+                Title = "Kill Aura",
+                Content = "Stopped.",
+                Duration = 3,
+                Image = 4483362458
+            })
+        end
+    end
+})
+
+local Section = MainTab:CreateSection("Radius")
+
+-- Kill Aura Radius Slider
+MainTab:CreateSlider({
+    Name = "Kill Aura Radius",
+    Range = {1, 1000},
+    Increment = 1,
+    Suffix = " studs",
+    CurrentValue = getgenv().AuraRadius,
+    Flag = "AuraRadius",
+    Callback = function(value)
+        getgenv().AuraRadius = value
+    end
+})
+
+local Section = ESPTab:CreateSection("ESP")
+
+-- Teleport Button
+ESPTab:CreateButton({
+    Name = "Teleport to Nearest Selected Item",
+    Callback = function()
+        local plr = game.Players.LocalPlayer
+        local root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+        local nearest
+        local shortestDist = math.huge
+        for _, item in pairs(workspace.Items:GetChildren()) do
+            if item:IsA("Model") and table.find(getgenv().SelectedItems, item.Name) then
+                local primary = item.PrimaryPart or item:FindFirstChildWhichIsA("Part")
+                if primary then
+                    local dist = (primary.Position - root.Position).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        nearest = primary
+                    end
+                end
+            end
+        end
+        if nearest then
+            root.CFrame = nearest.CFrame + Vector3.new(0, 0, 2)
+        else
+            Rayfield:Notify({
+                Title = "Teleport",
+                Content = "No selected items found nearby.",
+                Duration = 3,
+                Image = 4483362458
+            })
+        end
+    end
+})
+
+-- ESP Toggle
+ESPTab:CreateToggle({
+    Name = "Enable ESP",
+    CurrentValue = getgenv().ESPEnabled,
+    Flag = "ESP",
+    Callback = function(Value)
+        getgenv().ESPEnabled = Value
+        for _, box in pairs(ESPFolder) do
+            box.Visible = Value
+        end
+    end
+})
+
+-- Player Tab
+local PlayerTab = Window:CreateTab("Player", 4483362458) -- Icon can be any decal ID
+
+local Section = PlayerTab:CreateSection("Walkspeed")
+
+-- WalkSpeed Slider
+PlayerTab:CreateSlider({
+    Name = "WalkSpeed",
+    Range = {16, 200},
+    Increment = 1,
+    Suffix = " speed",
+    CurrentValue = 16,
+    Flag = "WalkSpeed",
+    Callback = function(value)
+        local plr = game.Players.LocalPlayer
+        if plr and plr.Character and plr.Character:FindFirstChild("Humanoid") then
+            plr.Character.Humanoid.WalkSpeed = value
+        end
+    end
+})
+
+local Section = PlayerTab:CreateSection("InfiniteJump")
+
+-- Infinite Jump Toggle
+local infiniteJumpEnabled = false
+PlayerTab:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Flag = "InfiniteJump",
+    Callback = function(state)
+        infiniteJumpEnabled = state
+    end
+})
+
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if infiniteJumpEnabled then
+        local plr = game.Players.LocalPlayer
+        if plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            plr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
+        end
+    end
+end)
+
+-- Flight Script Toggle (Infinite Yield style)
+local flying = false
+local function Fly()
+    local plr = game.Players.LocalPlayer
+    local char = plr.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    local bp = Instance.new("BodyPosition")
+    bp.Name = "FlightBP"
+    bp.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+    bp.Position = hrp.Position
+    bp.Parent = hrp
+
+    local bg = Instance.new("BodyGyro")
+    bg.Name = "FlightBG"
+    bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+    bg.CFrame = hrp.CFrame
+    bg.Parent = hrp
+
+    local UIS = game:GetService("UserInputService")
+    local cam = workspace.CurrentCamera
+
+    local speed = 80
+    local direction = Vector3.zero
+
+    local inputConn = UIS.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.KeyCode == Enum.KeyCode.W then direction = Vector3.new(0, 0, -1)
+        elseif input.KeyCode == Enum.KeyCode.S then direction = Vector3.new(0, 0, 1)
+        elseif input.KeyCode == Enum.KeyCode.A then direction = Vector3.new(-1, 0, 0)
+        elseif input.KeyCode == Enum.KeyCode.D then direction = Vector3.new(1, 0, 0)
+        elseif input.KeyCode == Enum.KeyCode.Space then direction = Vector3.new(0, 1, 0)
+        elseif input.KeyCode == Enum.KeyCode.LeftControl then direction = Vector3.new(0, -1, 0)
+        end
+    end)
+
+    local inputEndConn = UIS.InputEnded:Connect(function(input)
+        direction = Vector3.zero
+    end)
+
+    while flying and bp and bg do
+        task.wait()
+        if not flying then break end
+        local move = (cam.CFrame:VectorToWorldSpace(direction)).Unit
+        if direction.Magnitude > 0 then
+            bp.Position = hrp.Position + move * speed * task.wait()
+        else
+            bp.Position = hrp.Position
+        end
+        bg.CFrame = cam.CFrame
+    end
+
+    -- Cleanup
+    bp:Destroy()
+    bg:Destroy()
+    inputConn:Disconnect()
+    inputEndConn:Disconnect()
+end
+
+local Section = PlayerTab:CreateSection("Flight")
+
+PlayerTab:CreateToggle({
+    Name = "Flight (PC ONLY)",
+    CurrentValue = false,
+    Flag = "Flight",
+    Callback = function(state)
+        flying = state
+        if flying then
+            Fly()
+        end
+    end
+})
+
+-- End of Script
