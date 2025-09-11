@@ -43,7 +43,7 @@ local Window = Rayfield:CreateWindow({
 getgenv().AutoFarm = false
 getgenv().SelectedItems = {
     "Log", "Coal", "Tyre", "Chair", "Sheet Metal",
-    "Bolt", "Broken Fan", "Fuel Canister", "Carrot", "Berry"
+    "Bolt", "Broken Fan", "Fuel Canister", "Carrot", "Berry", "Broken Microwave"
 }
 getgenv().ESPEnabled = false
 getgenv().KillAuraEnabled = false
@@ -56,7 +56,7 @@ local ESPFolder = {}
 -- All Item Names
 local AllItems = {
     "Log", "Coal", "Tyre", "Chair", "Sheet Metal",
-    "Bolt", "Broken Fan", "Fuel Canister", "Carrot", "Berry"
+    "Bolt", "Broken Fan", "Fuel Canister", "Carrot", "Berry", "Broken Microwave"
 }
 
 -- Auto Farm Loop
