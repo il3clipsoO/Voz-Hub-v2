@@ -1,10 +1,8 @@
 --[[
 99 Nights in the Forest Hub V2
 Features: Auto Farm (Selectable + max count), ESP, Teleport, Kill Aura
-Theme: Dark Red
 ]]
 
--- Rayfield Library
 -- Rayfield Library
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
@@ -16,7 +14,7 @@ end
 
 -- Create Window with Key System
 local Window = Rayfield:CreateWindow({
-    Name = "👁️Voz Hub v2👁️",
+    Name = "🔥Voz Hub v3🔥",
     LoadingTitle = "Loading Voz Hub...",
     LoadingSubtitle = "by 9Voz",
     ConfigurationSaving = {
@@ -43,20 +41,15 @@ local Window = Rayfield:CreateWindow({
 getgenv().AutoFarm = false
 getgenv().SelectedItems = {
     "Log", "Coal", "Tyre", "Chair", "Sheet Metal",
-    "Bolt", "Broken Fan", "Fuel Canister", "Carrot", "Berry", "Broken Microwave", "Bandage"
+    "Bolt", "Broken Fan", "Fuel Canister", "Carrot", "Berry", "Broken Microwave", "Bandage", "Morsel", "Steak", "Good Sack", "Good Axe", "Giant Sack", "Strong Axe", "Revolver", "Revolver Ammo", "Rifle", "Rifle Ammo"
 }
-getgenv().ESPEnabled = false
-getgenv().KillAuraEnabled = false
-getgenv().AuraRadius = 15
-getgenv().SelectedEnemies = {"Bunny"}
-getgenv().MaxItemsToCollect = 5 -- default max items to pull per type per loop
 
 local ESPFolder = {}
 
 -- All Item Names
 local AllItems = {
     "Log", "Coal", "Tyre", "Chair", "Sheet Metal",
-    "Bolt", "Broken Fan", "Fuel Canister", "Carrot", "Berry", "Broken Microwave", "Bandage"
+    "Bolt", "Broken Fan", "Fuel Canister", "Carrot", "Berry", "Broken Microwave", "Bandage", "Morsel", "Steak", "Good Sack", "Good Axe", "Giant Sack", "Strong Axe", "Revolver", "Revolver Ammo", "Rifle", "Rifle Ammo"
 }
 
 -- Auto Farm Loop
@@ -85,28 +78,6 @@ function AutoFarmLoop()
     end
 end
 
--- Kill Aura Loop
-function KillAuraLoop()
-    while getgenv().KillAuraEnabled do
-        task.wait(0.3)
-        local player = game.Players.LocalPlayer
-        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        if root then
-            for _, enemy in pairs(workspace.Characters:GetChildren()) do
-                if enemy:IsA("Model") and table.find(getgenv().SelectedEnemies, enemy.Name) then
-                    local enemyRoot = enemy:FindFirstChild("HumanoidRootPart")
-                    local humanoid = enemy:FindFirstChildOfClass("Humanoid")
-                    if enemyRoot and humanoid and humanoid.Health > 0 then
-                        local dist = (enemyRoot.Position - root.Position).Magnitude
-                        if dist <= getgenv().AuraRadius then
-                            humanoid:TakeDamage(1000)
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
 
 -- ESP Functions
 local function AddESP(item)
@@ -181,7 +152,7 @@ local Section = MainTab:CreateSection("Settings")
 
 -- Max Items InputBox
 MainTab:CreateInput({
-    Name = "Max Items to Collect",
+    Name = "Items To Collect",
     PlaceholderText = "Enter a number (e.g. 5)",
     RemoveTextAfterFocusLost = false,
     Callback = function(text)
@@ -209,14 +180,14 @@ local Section = MainTab:CreateSection("Fuel And Scraps")
 
 -- Auto Farm Toggle
 MainTab:CreateToggle({
-    Name = "Auto Farm Selected Items",
+    Name = "Bring Items",
     CurrentValue = false,
     Flag = "AutoFarm",
     Callback = function(Value)
         getgenv().AutoFarm = Value
         if Value then
             Rayfield:Notify({
-                Title = "Auto Farm",
+                Title = "Bring Items",
                 Content = "Collecting selected items...",
                 Duration = 4,
                 Image = 4483362458
@@ -224,7 +195,7 @@ MainTab:CreateToggle({
             task.spawn(AutoFarmLoop)
         else
             Rayfield:Notify({
-                Title = "Auto Farm",
+                Title = "Bring Items",
                 Content = "Stopped.",
                 Duration = 3,
                 Image = 4483362458
@@ -233,49 +204,7 @@ MainTab:CreateToggle({
     end
 })
 
-local Section = MainTab:CreateSection("Killaura")
-
--- Kill Aura Toggle
-MainTab:CreateToggle({
-    Name = "Kill Aura (NOT WORKING)!",
-    CurrentValue = false,
-    Flag = "KillAura",
-    Callback = function(Value)
-        getgenv().KillAuraEnabled = Value
-        if Value then
-            Rayfield:Notify({
-                Title = "Kill Aura",
-                Content = "Bunnies will be slaughtered...",
-                Duration = 4,
-                Image = 4483362458
-            })
-            task.spawn(KillAuraLoop)
-        else
-            Rayfield:Notify({
-                Title = "Kill Aura",
-                Content = "Stopped.",
-                Duration = 3,
-                Image = 4483362458
-            })
-        end
-    end
-})
-
-local Section = MainTab:CreateSection("Radius")
-
--- Kill Aura Radius Slider
-MainTab:CreateSlider({
-    Name = "Kill Aura Radius",
-    Range = {1, 1000},
-    Increment = 1,
-    Suffix = " studs",
-    CurrentValue = getgenv().AuraRadius,
-    Flag = "AuraRadius",
-    Callback = function(value)
-        getgenv().AuraRadius = value
-    end
-})
-
+-- Create ESP
 local Section = ESPTab:CreateSection("ESP")
 
 -- Teleport Button
@@ -440,6 +369,20 @@ PlayerTab:CreateToggle({
             Fly()
         end
     end
+})
+
+local Section = PlayerTab:CreateSection("Other Scripts")
+
+PlayerTab:CreateButton({
+    Name = "Infinite Yield",
+    Callback = function()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+})
+
+ PlayerTab:CreateButton({
+    Name = "Dex",
+    Callback = function()
+    loadstring(game:HttpGet("https://obj.wearedevs.net/2/scripts/Dex%20Explorer.lua"))()
 })
 
 -- End of Script
