@@ -14,7 +14,7 @@ end
 
 -- Create Window with Key System
 local Window = Rayfield:CreateWindow({
-    Name = "🔥Voz Hub v3🔥",
+    Name = "🔴Voz Hub v3🔴",
     LoadingTitle = "Loading Voz Hub...",
     LoadingSubtitle = "by 9Voz",
     ConfigurationSaving = {
@@ -25,7 +25,7 @@ local Window = Rayfield:CreateWindow({
     Discord = {
         Enabled = false
     },
-    KeySystem = true, -- ✅ Enable key system
+    KeySystem = false, -- ✅ Enable key system
     KeySettings = {
         Title = "Voz Hub Access",
         Subtitle = "Key System - 99 Nights",
@@ -376,13 +376,15 @@ local Section = PlayerTab:CreateSection("Other Scripts")
 PlayerTab:CreateButton({
     Name = "Infinite Yield",
     Callback = function()
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+    end,
 })
 
- PlayerTab:CreateButton({
+PlayerTab:CreateButton({
     Name = "Dex",
     Callback = function()
-    loadstring(game:HttpGet("https://obj.wearedevs.net/2/scripts/Dex%20Explorer.lua"))()
+        loadstring(game:HttpGet("https://obj.wearedevs.net/2/scripts/Dex%20Explorer.lua"))()
+    end,
 })
 
 -- End of Script
